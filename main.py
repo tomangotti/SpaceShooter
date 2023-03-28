@@ -177,9 +177,9 @@ def handle_bullets(user_bullets, enemy_bullets, user, enemies):
 def draw_winner(text, SCORE):
     draw_text = WINNER_FONT.render(text + str(SCORE), 1, WHITE)
     WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()//2, HEIGHT//2 - draw_text.get_height()//2))
-    pygame.display.update()
-    pygame.time.wait(1000)
-    
+    # pygame.display.update()
+    # pygame.time.wait(1000)
+
     
 
     
@@ -193,7 +193,7 @@ async def main():
     meteors = []
     user_bullets = []
     enemy_bullets = []
-    SCORE = 45
+    SCORE = 0
     USER_HEALTH = 10
     MAX_ENEMIES = 5
     MAX_ENEMY_BULLETS = 12
@@ -231,6 +231,8 @@ async def main():
             MAX_ENEMY_BULLETS = 30
             if BORDER.y < 600:
                 BORDER.y += 1
+
+                
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
