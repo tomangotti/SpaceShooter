@@ -7,6 +7,7 @@ from post import post_score
 
 
 
+
 def resource_path(relative_path):
     try:
     # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -17,7 +18,8 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 pygame.font.init()
-pygame.init()
+
+
 
 
 
@@ -47,17 +49,18 @@ VEL = 5
 BULLET_VEL = 7
 ENEMY_BULLET_VEL = 4
 ENEMY_VEL = 1
-# MAX_ENEMIES = 5
 MAX_USER_BULLETS = 5
-# MAX_ENEMY_BULLETS = 10
 METEOR_VEL = 1
+MUFFIN_VEL = 3
 SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 55, 40
 METEOR_WIDTH, METEOR_HEIGHT = 90, 90
+MUFFIN_WIDTH, MUFFIN_HEIGHT = 35, 35
 
 # events
 ENEMY_HIT = pygame.USEREVENT + 1
 USER_HIT = pygame.USEREVENT + 2
 METEOR_HIT = pygame.USEREVENT + 3
+MUFFIN_HIT = pygame.USEREVENT + 4
 
 
 # assests
@@ -68,10 +71,12 @@ RED_SPACESHIP_IMAGE = pygame.image.load(resource_path('Assests/spaceship_red.png
 RED_SPACESHIP = pygame.transform.rotate(pygame.transform.scale(RED_SPACESHIP_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), 180)
 METEOR_IMAGE = pygame.image.load(resource_path('Assests/meteor.png'))
 METEOR = pygame.transform.scale(METEOR_IMAGE, (METEOR_WIDTH, METEOR_HEIGHT))
+MUFFIN_IMAGE = pygame.image.load(resource_path('Assests/muffin.png'))
+MUFFIN = pygame.transform.scale(MUFFIN_IMAGE, (MUFFIN_WIDTH, MUFFIN_HEIGHT))
 
 
 # displaying on the window
-def draw_window(user, enemies, user_bullets, enemy_bullets, USER_HEALTH, SCORE, meteors):
+def draw_window(user, enemies, user_bullets, enemy_bullets, USER_HEALTH, SCORE, meteors, muffins):
     WIN.blit(SPACE, (0, 0))
     pygame.draw.rect(WIN, BLACK, BORDER)
 
@@ -92,6 +97,9 @@ def draw_window(user, enemies, user_bullets, enemy_bullets, USER_HEALTH, SCORE, 
 
     for meteor in meteors:
         WIN.blit(METEOR, (meteor.x, meteor.y))
+
+    for muffin in muffins:
+        WIN.blit(MUFFIN, (muffin.x, muffin.y) )
 
     pygame.display.update()
 
@@ -146,6 +154,23 @@ def handle_meteor(meteors, user, user_bullets, enemy_bullets):
 
         if meteor.x >= WIDTH:
             meteors.remove(meteor)
+#muffin movement
+
+def handle_muffin(muffins, user):
+    for muffin in muffins:
+        muffin.x += MUFFIN_VEL
+
+        if user.colliderect(muffin):
+            pygame.event.post(pygame.event.Event(MUFFIN_HIT))
+            if muffin in muffins:
+                muffins.remove(muffin)
+        
+        if muffin.x >= WIDTH:
+            muffin.remove(muffin)
+
+
+
+
 
 # bullet movements
 
@@ -191,6 +216,7 @@ async def main():
 
     enemies = []
     meteors = []
+    muffins = []
     user_bullets = []
     enemy_bullets = []
     SCORE = 0
@@ -198,6 +224,7 @@ async def main():
     MAX_ENEMIES = 5
     MAX_ENEMY_BULLETS = 12
     MAX_METEORS = 1
+    MAX_MUFFINS = 1
     
     MAX_Y = 75
 
@@ -248,12 +275,16 @@ async def main():
                         enemy_bullets.append(bullet)
 
                 if event.key == pygame.K_SPACE and len(user_bullets) < MAX_USER_BULLETS:
-                    bullet = pygame.Rect(user.x + user.width//2 - 2, user.y - user.height//2, 5, 10)
+                    bullet = pygame.Rect(user.x + user.width//2 - 2, user.y - user.height//2, 5, 10)                   
                     user_bullets.append(bullet)
 
                 if len(meteors) < MAX_METEORS:
                     meteor = pygame.Rect(-500, random.randint(user.y -40, user.y + 10) ,  METEOR_WIDTH, METEOR_HEIGHT)
                     meteors.append(meteor)
+
+                if len(muffins) < MAX_MUFFINS:
+                    muffin = pygame.Rect(-2500, random.randint(user.y -10, user.y + 10) ,  MUFFIN_WIDTH, MUFFIN_HEIGHT)
+                    muffins.append(muffin)
 
             if event.type == USER_HIT:
                 USER_HEALTH -= 1
@@ -263,6 +294,10 @@ async def main():
 
             if event.type == METEOR_HIT:
                 USER_HEALTH -= 3
+
+            if event.type == MUFFIN_HIT:
+                USER_HEALTH += 3
+
 
         winner_text = ""
         if USER_HEALTH <= 0:
@@ -274,10 +309,11 @@ async def main():
 
         keys_pressed = pygame.key.get_pressed()
         user_handle_movement(keys_pressed, user)
+        handle_muffin(muffins, user)
         handle_meteor(meteors, user, user_bullets, enemy_bullets)
         handle_bullets(user_bullets, enemy_bullets, user, enemies)
         handle_enemy_movement(enemies, user, MAX_Y)
-        draw_window(user, enemies, user_bullets, enemy_bullets, USER_HEALTH, SCORE, meteors)
+        draw_window(user, enemies, user_bullets, enemy_bullets, USER_HEALTH, SCORE, meteors, muffins)
     
         await asyncio.sleep(0)
     asyncio.run(main())
