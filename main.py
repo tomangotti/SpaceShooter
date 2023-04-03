@@ -166,7 +166,7 @@ def handle_muffin(muffins, user):
                 muffins.remove(muffin)
         
         if muffin.x >= WIDTH:
-            muffin.remove(muffin)
+            muffins.remove(muffin)
 
 
 
